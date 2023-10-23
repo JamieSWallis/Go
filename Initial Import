@@ -1,0 +1,1508 @@
+import pygame
+import random
+
+pygame.init()
+
+# Basic game variables
+turn = 0
+handicapLevel = -1
+resign = False
+passCounter = 0
+
+# Set colours with rgb
+black, white, grey, brown, orange, darkWhite, darkGrey = (0, 0, 0), (255, 255, 255), (168, 166, 158), (236, 121, 41), (255, 137, 55), (190, 190, 190), (100, 100, 100)
+
+# Creates screen
+displayLength = 600
+surface = pygame.display.set_mode((displayLength, displayLength))
+pygame.display.set_caption("Go!")
+
+# Defining a font
+font15 = pygame.font.SysFont('Calibri', 15)
+font18 = pygame.font.SysFont('Calibri', 18)
+font20 = pygame.font.SysFont('Calibri', 20)
+font25 = pygame.font.SysFont('Calibri', 25)
+font38 = pygame.font.SysFont('Calibri', 38)
+font40 = pygame.font.SysFont('Calibri', 40)
+font42 = pygame.font.SysFont('Calibri', 42)
+font45 = pygame.font.SysFont('Calibri', 45)
+font47 = pygame.font.SysFont('Calibri', 47)
+font48 = pygame.font.SysFont('Comicsans', 48)
+font50 = pygame.font.SysFont('Calibri', 50)
+font70 = pygame.font.SysFont('Calibri', 70)
+font100 = pygame.font.SysFont('Calibri', 100)
+font250 = pygame.font.SysFont('Comicsans', 250)
+font350 = pygame.font.SysFont('Comicsans', 350)
+
+# Text for buttons
+# GO! symbol
+GOLogo = font48.render('GO!', True, brown)
+GO = font250.render('GO!', True, brown)
+
+# Previous page button
+backText = font47.render('Back', True, white)
+
+# Start menu buttons
+viewRulesText = font42.render('View Rules', True, white)
+startText = font50.render('Start', True, white)
+quitText = font50.render('Quit', True, white)
+
+# Rule screens text
+exitText = font47.render('Exit', True, white)
+nextText = font47.render('Next', True, white)
+
+overviewRuleHeading = font70.render("Overview", True, white)
+overviewRuleText = ["The rules for Go are fairly",
+                    "straightforward. Go is played with",
+                    "counters called stones that must be",
+                    "placed on intersections. In Go you",
+                    "can and create groups of your",
+                    "stones and capture your opponents",
+                    "stones. To win you must have more",
+                    "territory than you're opponent,",
+                    "which is decided at the end of",
+                    "the game."]
+overviewParagraph = []
+for line in range(0, len(overviewRuleText)):
+    overviewParagraph.append(font40.render(overviewRuleText[line], True, white))
+    
+placingRuleHeading = font70.render("Placing", True, white)
+placingRuleText = ["Each player has counters called",
+                   "stones. These stones can only be",
+                   "placed on points where two lines",
+                   "intersect, called intersections.",
+                   "Stones cannot be placed on an",
+                   "intersection which already has a",
+                   "stone on it, or an intersection where",
+                   "the stone would be captured ",
+                   "immediately. When a stone is placed",
+                   "it will be sorted into groups, initiate",
+                   "the capture sequence, and then the",
+                   "turn will change."]
+placingParagraph = []
+for line in range(0, len(placingRuleText)):
+    placingParagraph.append(font40.render(placingRuleText[line], True, white))
+
+capturingRuleHeading = font70.render("Capturing", True, white)
+capturingRuleText = ["A stone has liberties, which are the",
+                     "empty spaces adjacent to each",
+                     "stone. A stone can be captured by",
+                     "an opponent if all of that stones",
+                     "liberties are surrounded by their",
+                     "opponents stones. Stones that are",
+                     "captured are removed from",
+                     "the board. "]
+capturingParagraph = []
+for line in range(0, len(capturingRuleText)):
+    capturingParagraph.append(font40.render(capturingRuleText[line], True, white))
+
+groupingRuleHeading = font70.render("Grouping", True, white)
+groupingRuleText = ["To make a stone harder to capture",
+                    "other stones can be placed adjacent",
+                    "to it. These stones are considered",
+                    "grouped and share liberties. As",
+                    "grouped stones share liberties, all of",
+                    "these spaces most be occupied by",
+                    "the opponent in order to",
+                    "capture them."]
+groupingParagraph = []
+for line in range(0, len(groupingRuleText)):
+    groupingParagraph.append(font40.render(groupingRuleText[line], True, white))
+
+endingRuleHeading = font70.render("Ending", True, white)
+endingRuleText = ["To end the game both players need",
+                  "to pass consecutively when deciding",
+                  "a winner the total territory of both",
+                  "players is calculated. Territory is the",
+                  "combined amount of stones",
+                  "belonging to each player as well as",
+                  "the empty spaces occupied by them.",
+                  "Empty spaces belong to a player if,",
+                  "when those spaces are considered",
+                  "grouped together, they only touch a",
+                  "single colour. The player with larger",
+                  "territory is deemed the winner.",]
+endingParagraph = []
+for line in range(0, len(endingRuleText)):
+    endingParagraph.append(font40.render(endingRuleText[line], True, white))
+
+# Player vs Computer buttons
+opponentTypeText = font70.render('Opponent Type', True, white)
+playerText = font50.render('Player', True, white)
+computerText = font45.render('Computer', True, white)
+
+# AI difficulty buttons
+AIDifficultyText = font70.render('AI Difficulty', True, white)
+AIEasyText = font50.render('Easy', True, white)
+AIIntermediateText = font38.render('Intermediate', True, white)
+
+# Board size buttons
+boardSizeText = font70.render('Board Size', True, white)
+a5x5Text = font45.render('5x5', True, white)
+b9x9Text = font45.render('9x9', True, white)
+c11x11Text = font45.render('11x11', True, white)
+d13x13Text = font45.render('13x13', True, white)
+e19x19Text = font45.render('19x19', True, white)
+
+# Handicap buttons
+handicapExplainText = font70.render('Degree of handicap?', True, white)
+handicap0Text = font100.render('0', True, white)
+handicap2Text = font100.render('2', True, white)
+handicap3Text = font100.render('3', True, white)
+handicap4Text = font100.render('4', True, white)
+handicap5Text = font100.render('5', True, white)
+handicap6Text = font100.render('6', True, white)
+handicap7Text = font100.render('7', True, white)
+handicap8Text = font100.render('8', True, white)
+handicap9Text = font100.render('9', True, white)
+
+# Pass turn and Resign buttons
+passText = font15.render('Pass Turn', True, white)
+passCounterText = font20.render('Pass counter: ', True, white)
+resignText = font18.render('Resign', True, white)
+
+# End game text
+blackText = font100.render('Black', True, white)
+blackScoreText = font25.render('Black Score:', True, white)
+whiteText = font100.render('White', True, white)
+whiteScoreText = font25.render('White Score:', True, white)
+drawText = font100.render('No one', True, white)
+winText = font100.render('Wins!', True, white)
+continueText = font50.render('Continue', True, white)
+
+
+# Box placement
+# Previous page box
+backBoxX, backBoxY = 0, 0
+goLogoBoxX, goLogoBoxY = 515, 0
+
+# Start menu boxes
+ruleBoxX, ruleBoxY = 200, 350
+startBoxX, startBoxY = 50, 450
+quitBoxX, quitBoxY = 350, 450
+
+# Rule menu boxes
+exitBoxX, exitBoxY = 0, 0
+nextBoxX, nextBoxY = 500, 550
+backRuleBoxX, backRuleBoxY = 0, 550
+
+# Player vs Computer boxes
+opponentTypeBoxX, opponentTypeBoxY = 85, 325
+playerBoxX, playerBoxY = 75, 425
+computerBoxX, computerBoxY = 325, 425
+
+# AI difficulty boxes
+AIDifficultyBoxX, AIDifficultyBoxY = 145, 325
+AIEasyBoxX, AIEasyBoxY = 75, 425
+AIIntermediateBoxX, AIIntermediateBoxY = 325, 425
+
+# Board size boxes
+boardSizeBoxX, boardSizeBoxY = 150, 325
+a5x5BoxX, a5x5BoxY = 200, 400
+b9x9BoxX, b9x9BoxY = 75, 465
+c11x11BoxX, c11x11BoxY = 75, 530
+d13x13BoxX, d13x13BoxY = 325, 465
+e19x19BoxX, e19x19BoxY = 325, 530
+
+# Handicap boxes
+handicapExplainBoxX, handicapExplainBoxY = 10, 50
+handicap0BoxX, handicap0BoxY = 75, 150
+handicap2BoxX, handicap2BoxY = 250, 150
+handicap3BoxX, handicap3BoxY = 425, 150
+handicap4BoxX, handicap4BoxY = 75, 310
+handicap5BoxX, handicap5BoxY = 250, 310
+handicap6BoxX, handicap6BoxY = 425, 310
+handicap7BoxX, handicap7BoxY = 75, 470
+handicap8BoxX, handicap8BoxY = 250, 470
+handicap9BoxX, handicap9BoxY = 425, 470
+
+# Pass turn and Resign boxes
+passBoxX, passBoxY = 0, 0
+passCounterBoxX, passCounterBoxY = 225, 0
+resignBoxX, resignBoxY = 535, 0
+
+# End Game boxes
+blackScoreBoxX, blackScoreBoxY = 80, 325
+whiteScoreBoxX, whiteScoreBoxY = 320, 325
+continueBoxX, continueBoxY = 80, 465
+endQuitBoxX, endQuitBoxY = 320, 465
+
+
+# Subroutine for placing boxes
+def boxPlacementTiny(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 65 and y <= mouseY <= y + 20:
+        pygame.draw.rect(surface, darkWhite, [x, y, 65, 20])
+    else:
+        pygame.draw.rect(surface, darkGrey, [x, y, 65, 20])
+    pygame.draw.rect(surface, black, [x, y, 65, 20], 1)
+    
+
+# Subroutine for placing boxes
+def boxPlacementSmallest(x, y):
+    pygame.draw.rect(surface, darkGrey, [x, y, 85, 50])
+    pygame.draw.rect(surface, black, [x, y, 85, 50], 1)
+
+
+# Subroutine for placing boxes
+def boxPlacementSmaller(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 100 and y <= mouseY <= y + 50:
+        pygame.draw.rect(surface, darkWhite, [x, y, 100, 50])
+    else:
+        pygame.draw.rect(surface, darkGrey, [x, y, 100, 50])
+    pygame.draw.rect(surface, black, [x, y, 100, 50], 1)
+
+
+# Subroutine for placing boxes
+def boxPlacementSmall(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 100 and y <= mouseY <= y + 100:
+        pygame.draw.rect(surface, darkWhite, [x, y, 100, 100])
+    else:
+        pygame.draw.rect(surface, darkGrey, [x, y, 100, 100])
+    pygame.draw.rect(surface, black, [x, y, 100, 100], 1)
+
+
+# Subroutine for placing boxes
+def boxPlacementNormal(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 200 and y <= mouseY <= y + 50:
+        pygame.draw.rect(surface, darkWhite, [x, y, 200, 50])
+    else:
+        pygame.draw.rect(surface, darkGrey, [x, y, 200, 50])
+    pygame.draw.rect(surface, black, [x, y, 200, 50], 1)
+    
+
+# Subroutine for placing boxes
+def boxPlacementNormalBorder3(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 200 and y <= mouseY <= y + 50:
+        pygame.draw.rect(surface, darkWhite, [x, y, 200, 50])
+    else:
+        pygame.draw.rect(surface, darkGrey, [x, y, 200, 50])
+    pygame.draw.rect(surface, black, [x, y, 200, 50], 3)
+
+
+# Subroutine for clicking boxes that have been placed
+def boxClickedTiny(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 65 and y <= mouseY <= y + 20:
+        return True
+    else:
+        return False
+
+
+# Subroutine for clicking boxes that have been placed
+def boxClickedSmaller(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 100 and y <= mouseY <= y + 50:
+        return True
+    else:
+        return False
+    
+
+# Subroutine for clicking boxes that have been placed
+def boxClickedSmall(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 100 and y <= mouseY <= y + 100:
+        return True
+    else:
+        return False
+
+
+# Subroutine for clicking boxes that have been placed
+def boxClickedNormal(mouseX, mouseY, x, y):
+    if x <= mouseX <= x + 200 and y <= mouseY <= y + 50:
+        return True
+    else:
+        return False
+
+
+# Finds the location of a value in a list
+def indexFinder(list1, searchedFor):
+    for i in range(0, len(list1)):
+        if searchedFor in list1[i]:
+            return i, list1[i].index(searchedFor)
+
+
+# Shows the text-based board
+def showBoard():
+    global board
+    for i in range(0, len(board)):
+        print(board[i])
+
+
+# Placing visual stones
+def drawStones(x, y, colour):
+    if colour == "B":
+        pygame.draw.circle(surface, black, [x, y], 180 / boardSize)
+    else:
+        pygame.draw.circle(surface, black, [x, y], 180 / boardSize)
+        pygame.draw.circle(surface, white, [x, y], 180 / (boardSize+(boardSize/9)))
+
+
+# Drawing over pre-existing stones when captured
+def drawCapture(y, x):
+    # For top
+    if int(y) == boardStart:
+        pygame.draw.rect(surface, orange, [x - halfIntersection, y, intersectionLength, halfIntersection])
+        pygame.draw.rect(surface, grey, [x - halfIntersection, y - halfIntersection, intersectionLength, halfIntersection])
+        pygame.draw.line(surface, black, (x - halfIntersection, y), (x + halfIntersection, y), 3)
+        pygame.draw.line(surface, black, (x, y), (x, y + halfIntersection), 3)
+
+        # For top left
+        if int(x) == boardStart:
+            pygame.draw.rect(surface, grey, [x - halfIntersection, y - halfIntersection, halfIntersection, intersectionLength])
+            pygame.draw.line(surface, black, (x, y), (x + halfIntersection, y), 3)
+            pygame.draw.line(surface, black, (x, y), (x, y + halfIntersection), 3)
+
+        # For top right
+        elif int(x) == boardEnd:
+            pygame.draw.rect(surface, grey, [x, y - halfIntersection, halfIntersection, intersectionLength])
+            pygame.draw.line(surface, black, (x, y), (x - halfIntersection, y), 3)
+            pygame.draw.line(surface, black, (x, y), (x, y + halfIntersection), 3)
+        return True
+
+    elif int(y) == boardEnd:
+        # For bottom
+        pygame.draw.rect(surface, orange, [x - halfIntersection, y - halfIntersection, intersectionLength, halfIntersection])
+        pygame.draw.rect(surface, grey, [x - halfIntersection, y, intersectionLength, halfIntersection])
+        pygame.draw.line(surface, black, (x - halfIntersection, y), (x + halfIntersection, y), 3)
+        pygame.draw.line(surface, black, (x, y), (x, y - halfIntersection), 3)
+        # For bottom left
+        if int(x) == boardStart:
+            pygame.draw.rect(surface, grey, [x - halfIntersection, y - halfIntersection, halfIntersection, intersectionLength])
+            pygame.draw.line(surface, black, (x, y), (x + halfIntersection, y), 3)
+            pygame.draw.line(surface, black, (x, y), (x, y - halfIntersection), 3)
+
+        # For bottom right
+        elif int(x) == boardEnd:
+            pygame.draw.rect(surface, grey, [x, y - halfIntersection, halfIntersection, intersectionLength])
+            pygame.draw.line(surface, black, (x, y), (x - halfIntersection, y), 3)
+            pygame.draw.line(surface, black, (x, y), (x, y - halfIntersection), 3)
+        return True
+
+    # For left
+    elif int(x) == boardStart:
+        pygame.draw.rect(surface, orange, [x, y - halfIntersection, halfIntersection, intersectionLength])
+        pygame.draw.rect(surface, grey, [x - halfIntersection, y - halfIntersection, halfIntersection, intersectionLength])
+        pygame.draw.line(surface, black, (x, y - halfIntersection), (x, y + halfIntersection), 3)
+        pygame.draw.line(surface, black, (x, y), (x + halfIntersection, y), 3)
+        return True
+
+    # For right
+    elif int(x) == boardEnd:
+        pygame.draw.rect(surface, orange, [x - halfIntersection, y - halfIntersection, halfIntersection, intersectionLength])
+        pygame.draw.rect(surface, grey, [x, y - halfIntersection, halfIntersection, intersectionLength])
+        pygame.draw.line(surface, black, (x, y - halfIntersection), (x, y + halfIntersection), 3)
+        pygame.draw.line(surface, black, (x, y), (x - halfIntersection, y), 3)
+        return True
+
+    # For central intersection
+    else:
+        pygame.draw.circle(surface, orange, [x, y], 180 / boardSize)
+        pygame.draw.line(surface, black, (x - halfIntersection, y), (x + halfIntersection, y), 3)
+        pygame.draw.line(surface, black, (x, y - halfIntersection), (x, y + halfIntersection), 3)
+        return True
+
+
+# Places the stones for the desired handicap level
+def handicapPlacement(handicapLevel):
+    if handicapLevel >= 2:
+        stonePlacement(3, 15, "B")
+        stonePlacement(15, 3, "B")
+        stoneGrouping(3, 15, "B")
+        stoneGrouping(15, 3, "B")
+        drawStones(120, 480, "B")
+        drawStones(480, 120, "B")
+        
+    if handicapLevel >= 3:
+        stonePlacement(15, 15, "B")
+        stoneGrouping(15, 15, "B")
+        drawStones(480, 480, "B")
+        
+    if handicapLevel >= 4:
+        stonePlacement(3, 3, "B")
+        stoneGrouping(3, 3, "B")
+        drawStones(120, 120, "B")
+        
+    if handicapLevel >= 5 and handicapLevel != 6 and handicapLevel != 8:
+        stonePlacement(9, 9, "B")
+        stoneGrouping(9, 9, "B")
+        drawStones(300, 300, "B")
+        
+    if handicapLevel >= 6:
+        stonePlacement(3, 9, "B")
+        stonePlacement(15, 9, "B")
+        stoneGrouping(3, 9, "B")
+        stoneGrouping(15, 9, "B")
+        drawStones(120, 300, "B")
+        drawStones(480, 300, "B")
+        
+    if handicapLevel >= 8:
+        stonePlacement(9, 3, "B")
+        stonePlacement(9, 15, "B")
+        stoneGrouping(9, 3, "B")
+        stoneGrouping(9, 15, "B")
+        drawStones(300, 120, "B")
+        drawStones(300, 480, "B")
+
+
+# Checks for the liberties of the entered in stone co-ordinates
+def checkLibertiesSingle(searchedFor, x, y):
+    if int(y) > 0 and board[y - 1][x] == searchedFor:
+        return [x, y - 1]
+    if int(x) > 0 and board[y][x - 1] == searchedFor:
+        return [x - 1, y]
+    if int(y) < len(board) - 1 and board[y + 1][x] == searchedFor:
+        return [x, y + 1]
+    if int(x) < len(board) - 1 and board[y][x + 1] == searchedFor:
+        return [x + 1, y]
+    return False
+
+
+# Returns a list of all liberties being searched for
+def checkLibertiesMultiple(searchedFor, x, y):
+    combined = []
+    
+    if int(y) > 0 and board[y - 1][x] == searchedFor:
+        combined.append([x, y - 1])
+    if int(x) > 0 and board[y][x - 1] == searchedFor:
+        combined.append([x - 1, y])
+    if int(y) < len(board) - 1 and board[y + 1][x] == searchedFor:
+        combined.append([x, y + 1])
+    if int(x) < len(board) - 1 and board[y][x + 1] == searchedFor:
+        combined.append([x + 1, y])
+    if combined != []:
+        return combined
+    return False
+
+
+# Returns a list of all liberties NOT being searched for
+def checkLibertiesReverse(unsearchedFor, x, y):
+    combined = []
+    
+    if int(y) > 0 and board[y - 1][x] != unsearchedFor:
+        combined.append([x, y - 1, board[y - 1][x]])
+    if int(x) > 0 and board[y][x - 1] != unsearchedFor:
+        combined.append([x - 1, y, board[y][x - 1]])
+    if int(y) < len(board) - 1 and board[y + 1][x] != unsearchedFor:
+        combined.append([x, y + 1, board[y + 1][x]])
+    if int(x) < len(board) - 1 and board[y][x + 1] != unsearchedFor:
+        combined.append([x + 1, y, board[y][x + 1]])
+    if combined != []:
+        return combined
+    return False    
+    
+
+# Assigns the groups of stones in the form black(whichgroup(x,y)) and white(whichgroup(x,y))
+def findGroups(colour, x, y):
+    index = []
+
+    # Finds the location of all nearby liberties
+    groupLocation = checkLibertiesMultiple(colour, x, y)
+    if groupLocation != False:
+        # Finds the location of each group
+        for i in range(0, len(groupLocation)):
+            if colour == "B":
+                index.append(indexFinder(blackGroups, groupLocation[i]))
+            elif colour == "W":
+                index.append(indexFinder(whiteGroups, groupLocation[i]))
+            else:
+                index.append(indexFinder(emptyGroups, groupLocation[i]))
+        return index
+    return False
+
+
+# Add stones to pre-existing groups
+def appendGroups(colour, x, y):
+    index = findGroups(colour, x, y)
+    repeat = []
+    
+    # Sets recurring values to an empty value
+    for i in range(0, len(index) - 1):
+        for n in range(i + 1, len(index)):
+            if index[i] != [] and index[n] != []:
+                if index[i][0] == index[n][0]:
+                    index[n] = []
+                    
+    # Deletes all blank spaces in the groups
+    length = len(index)
+    for i in range(1, length):
+        if index[length - i] == []:
+            del index[length - i]
+
+    # Joins the original stone + all found groups to a single group
+    for i in range(0, len(index)):
+        # Appends the first found liberty to the group
+        if i == 0:
+            if colour == "B":
+                blackGroups[index[0][0]].append([x, y])
+            elif colour == "W":
+                whiteGroups[index[0][0]].append([x, y])
+            else:
+                emptyGroups[index[0][0]].append([x, y])
+        # Appends every other group and then leaves a blank space for each group    
+        else:
+            if colour == "B":
+                for n in range(0, len(blackGroups[index[i][0]])):
+                    blackGroups[index[0][0]].append(blackGroups[index[i][0]][n])
+                blackGroups[index[i][0]] = []
+            elif colour == "W":
+                for n in range(0, len(whiteGroups[index[i][0]])):
+                    whiteGroups[index[0][0]].append(whiteGroups[index[i][0]][n])
+                whiteGroups[index[i][0]] = []
+            else:
+                for n in range(0, len(emptyGroups[index[i][0]])):
+                    emptyGroups[index[0][0]].append(emptyGroups[index[i][0]][n])
+                emptyGroups[index[i][0]] = []
+    
+    # Deletes all blank spaces in the groups
+    if colour == "B":
+        length = len(blackGroups)
+        for i in range(1, length):
+            if blackGroups[length - i] == []:
+                del blackGroups[length - i]
+    elif colour == "W":
+        length = len(whiteGroups)
+        for i in range(1, length):
+            if whiteGroups[length - i] == []:
+                del whiteGroups[length - i]
+    else:
+        length = len(emptyGroups)
+        for i in range(1, length):
+            if emptyGroups[length - i] == []:
+                del emptyGroups[length - i]
+
+
+# Places a coloured stone on an intersection
+def stonePlacement(x, y, colour):
+    global board
+    # Prevents placing on a current intersection
+    if board[y][x] != "-":
+        print("Invalid move at: " + str([x, y]))
+        return False
+    else:
+        # Checks for an empty liberty, indicating a valid move
+        validPlacement1 = checkLibertiesSingle("-", x, y)
+        if validPlacement1 == False:
+            # Checks for any similar coloured stones, indicating a valid move
+            if colour == "B":
+                validPlacement2 = checkLibertiesSingle("B", x, y)
+            else:
+                validPlacement2 = checkLibertiesSingle("W", x, y)
+            if validPlacement2 == False:
+                print("Invalid move at: " + str([x, y]))
+                return False
+
+    board[y][x] = colour
+    return board
+
+
+# Checks if stones need to be put into an existing group or a new group
+# Then places them into that group
+def stoneGrouping(x, y, colour):
+    if colour == "B":
+        joinGroupBlack = checkLibertiesSingle("B", x, y)
+        if not joinGroupBlack:
+            blackGroups.append([[x, y]])
+        elif joinGroupBlack != False:
+            appendGroups(colour, x, y)
+            
+    elif colour == "W":
+        joinGroupWhite = checkLibertiesSingle("W", x, y)
+        if not joinGroupWhite:
+            whiteGroups.append([[x, y]])
+        elif joinGroupWhite != False:
+            appendGroups(colour, x, y)
+            
+    elif colour == "X":
+        joinGroupEmpty = checkLibertiesSingle("X", x, y)
+        if not joinGroupEmpty:
+            emptyGroups.append([[x, y]])
+        elif joinGroupEmpty != False:
+            appendGroups("X", x, y)
+
+
+# Checks and then initiates captures of stones
+def stoneCapture(x, y, colour):
+    # Prevents searching for stones before turn 2 
+    if turn > 2:
+        if colour == "B":
+            # Finds the location of neighbouring white groups
+            index = findGroups("W", x, y)
+            # To prevent it searching through an empty list
+            if index != False:
+                # Loops through the group for each stone to find an intersection that is empty
+                for i in range(0, len(index)):
+                    for j in range(0, len(whiteGroups[index[i][0]])):
+                        safeFromCapture = checkLibertiesMultiple("-", whiteGroups[index[i][0]][j][0],
+                                                                 whiteGroups[index[i][0]][j][1])
+                        if safeFromCapture != False:
+                            return False
+                    # Removing the stone(s) from the group array and then the board
+                    for j in range(0, len(whiteGroups[index[i][0]])):
+                        board[whiteGroups[index[i][0]][j][1]][whiteGroups[index[i][0]][j][0]] = "-"
+                        drawCapture(int(whiteGroups[index[i][0]][j][1] + 1) * intersectionLength,
+                                    int(whiteGroups[index[i][0]][j][0] + 1) * intersectionLength)
+                    whiteGroups.pop(index[i][0])
+                    print("Capture complete")
+        else:
+            # Finds the location of neighbouring black groups
+            index = findGroups("B", x, y)
+            # To prevent it searching through an empty list
+            if index != False:
+                # Loops through the group for each stone to find an intersection that is empty
+                for i in range(0, len(index)):
+                    for j in range(0, len(blackGroups[index[i][0]])):
+                        safeFromCapture = checkLibertiesMultiple("-", blackGroups[index[i][0]][j][0],
+                                                                 blackGroups[index[i][0]][j][1])
+                        if safeFromCapture != False:
+                            return False
+                    # Removing the stone(s) from the group array and then the board
+                    for j in range(0, len(blackGroups[index[i][0]])):
+                        board[blackGroups[index[i][0]][j][1]][blackGroups[index[i][0]][j][0]] = "-"
+                        drawCapture(int(blackGroups[index[i][0]][j][1] + 1) * intersectionLength,
+                                    int(blackGroups[index[i][0]][j][0] + 1) * intersectionLength)
+                    blackGroups.pop(index[i][0])
+                    print("Capture complete")
+
+
+# Subroutine for the changing of a turn
+def changeTurn():
+    global turn, colour
+    turn += 1
+    if colour == "B":
+        colour = "W"
+    else:
+        colour = "B"
+
+
+# Finds the sum for each of the territories for an empty group
+def tallyTerritories(i):
+    colour = "X"
+    # Loop through the length of the group
+    for j in range(0, len(emptyGroups[i])):
+        if colour == "X":
+            # Waiting for contact with a stone
+            adjacentColour = checkLibertiesReverse("X", emptyGroups[i][j][0], emptyGroups[i][j][1])
+            if adjacentColour != False:
+                # Sets colour to the first found stone
+                colour = adjacentColour[0][2]
+                # Checks if 2+ stones have been found at liberties on the same intersection
+                if len(adjacentColour) > 1:
+                    for n in range(1, len(adjacentColour)):
+                        if colour != adjacentColour[n][2]:
+                            return False
+        
+        # Checks for opposite colour stone. If found then the territory is neutral
+        elif colour == "B":
+            if checkLibertiesSingle("W", emptyGroups[i][j][0], emptyGroups[i][j][1]) != False:
+                return False
+        elif colour == "W":
+            if checkLibertiesSingle("B", emptyGroups[i][j][0], emptyGroups[i][j][1]) != False:
+                return False
+    return colour, len(emptyGroups[i])
+
+
+# Calculates the final score for each player
+def endGame():
+    global emptyGroups
+    phase = 9
+    
+    # Assigning all empty spaces into groups
+    emptyGroups = []
+    for i in range(0, boardSize):
+        for j in range(0, boardSize):
+            if board[j][i] == "-":
+                board[j][i] = "X"
+                stoneGrouping(i, j, "X")
+    
+    # Determines the total for both players, first by adding up all the remaining stones
+    blackTotal = 0
+    whiteTotal = 0
+    for i in range(0, len(blackGroups)):
+        blackTotal += len(blackGroups[i])
+    for i in range(0, len(whiteGroups)):
+        whiteTotal += len(whiteGroups[i])
+
+    # And then by adding up the territory of each player
+    for i in range(0, len(emptyGroups)):
+        tally = tallyTerritories(i)
+        if tally != False:
+            if tally[0] == "B":
+                blackTotal += tally[1]
+            elif tally[0] == "W":
+                whiteTotal += tally[1]
+    
+    return blackTotal, whiteTotal
+    
+
+# AI LEVELS
+# Basic AI: places randomly
+def AIEasy():
+    possibleMoves = []
+    for y in range(0, boardSize):
+        for x in range(0, boardSize):
+            if board[y][x] == "-":
+                possibleMoves.append([x, y])
+    for i in range(0, 10):
+        placement = possibleMoves[random.randint(0, len(possibleMoves)-1)]
+        if stonePlacement(placement[0], placement[1], AIColour) != False:
+            return placement
+    return False
+
+
+# Intermediate AI: Will either place randomly or place stones into groups
+def AIIntermediate():
+    variance = random.randint(0, 10)
+    if variance < 6 or turn < 2:
+        return AIEasy()
+    
+    else:
+        for i in range(0, (boardSize**2)//2):
+            # Picks a random group
+            # Then a random stone within that group
+            # Then that random stones liberties
+            # Then a random liberty from that random stone
+            # Checks if the stone would be captured if it were placed there
+            if AIColour == "B":
+                n = random.randint(0, len(blackGroups)-1)
+                randomStone = blackGroups[n][random.randint(0, len(blackGroups[n])-1)]
+                randomStoneLiberties = checkLibertiesMultiple("-", randomStone[0], randomStone[1])
+                randomLiberty = randomStoneLiberties[random.randint(0, len(randomStoneLiberties)-1)]
+                
+                index = findGroups("B", randomLiberty[0], randomLiberty[1])
+                group = blackGroups[index[0][0]]
+                group.append(randomLiberty)
+            else:
+                n = random.randint(0, len(whiteGroups)-1)
+                randomStone = whiteGroups[n][random.randint(0, len(whiteGroups[n])-1)]
+                randomStoneLiberties = checkLibertiesMultiple("-", randomStone[0], randomStone[1])
+                randomLiberty = randomStoneLiberties[random.randint(0, len(randomStoneLiberties)-1)]
+                
+                index = findGroups("W", randomLiberty[0], randomLiberty[1])
+                group = whiteGroups[index[0][0]]
+                group.append(randomLiberty)
+                    
+            for i in range(0, len(group)):
+                captureSafe = checkLibertiesSingle("-", group[i][0], group[i][1])
+                if captureSafe:
+                    stonePlacement(randomLiberty[0], randomLiberty[1], AIColour)
+                    return randomLiberty
+        # If the advanced AI fails then it uses the easy AI
+        return AIEasy()
+            
+
+# Determines the type of AI being used
+def AISelector(AIDifficulty):
+    if AIDifficulty == 1:
+        return AIEasy()
+    elif AIDifficulty == 2:
+        return AIIntermediate()
+
+
+# Sets all the variables and calls the subroutines for the AI to complete its turn
+def AITurn(AIColour):
+    global turn, passCounter
+    AIMove = AISelector(AIDifficulty)
+    if AIMove == False:
+        passCounter += 1
+    else:
+        AIPlacementX, AIPlacementY = AIMove[0], AIMove[1]
+        AIPlacementVisualX = (AIPlacementX + 1) * intersectionLength
+        AIPlacementVisualY = (AIPlacementY + 1) * intersectionLength
+        stoneGrouping(AIPlacementX, AIPlacementY, AIColour)
+        stoneCapture(AIPlacementX, AIPlacementY, AIColour)
+        drawStones(AIPlacementVisualX, AIPlacementVisualY, AIColour)
+        turn += 1
+        passCounter = 0
+
+
+# Start of the game
+phase = 0
+while True:
+    # stores the (x,y) coordinates
+    mouseX, mouseY = pygame.mouse.get_pos()
+        
+    if phase <= 6:
+        # Clear surface
+        surface.fill(grey)
+    
+    if phase <= 5:
+        # Places Go! logo
+        boxPlacementSmallest(goLogoBoxX, goLogoBoxY)
+        surface.blit(GOLogo, (goLogoBoxX+2, goLogoBoxY-10))
+    
+    if 0 <= phase <= 4:
+        # Places Go! icon
+        surface.blit(GO, (100, 0))
+     
+    
+    # Ending rule section
+    elif phase == -5:
+        
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, exitBoxX, exitBoxY)
+        boxPlacementSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Detects if the user wishes to leave the screen
+                if boxClickedSmaller(mouseX, mouseY, exitBoxX, exitBoxY):
+                    phase = 0
+                elif boxClickedSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY):
+                    phase = -4
+        
+        # Placing text onto buttons
+        surface.blit(endingRuleHeading, (205, 10))
+        pygame.draw.line(surface, black, (195, 66), (405, 66), 3)
+        for line in range(0, len(endingParagraph)):
+            surface.blit(endingParagraph[line], (10, 100 + (35*line)))
+        surface.blit(exitText, (exitBoxX + 8, exitBoxY + 3))
+        surface.blit(backText, (backRuleBoxX + 5, backRuleBoxY + 3))
+        
+        # Updates frames
+        pygame.display.update()
+        
+    
+    # Grouping rule section
+    if phase == -4:
+        
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, exitBoxX, exitBoxY)
+        boxPlacementSmaller(mouseX, mouseY, nextBoxX, nextBoxY)
+        boxPlacementSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Detects if the user wishes to leave the screen
+                if boxClickedSmaller(mouseX, mouseY, exitBoxX, exitBoxY):
+                    phase = 0
+                elif boxClickedSmaller(mouseX, mouseY, nextBoxX, nextBoxY):
+                    phase = -5
+                elif boxClickedSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY):
+                    phase = -3
+        
+        # Placing text onto buttons
+        surface.blit(groupingRuleHeading, (170, 10))
+        pygame.draw.line(surface, black, (170, 66), (430, 66), 3)
+        for line in range(0, len(groupingParagraph)):
+            surface.blit(groupingParagraph[line], (10, 100 + (35*line)))
+        surface.blit(exitText, (exitBoxX + 8, exitBoxY + 3))
+        surface.blit(nextText, (nextBoxX + 3, nextBoxY + 3))
+        surface.blit(backText, (backRuleBoxX + 5, backRuleBoxY + 3))
+        
+        # Updates frames
+        pygame.display.update()
+        
+    
+    # Capturing rule section
+    elif phase == -3:
+        
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, exitBoxX, exitBoxY)
+        boxPlacementSmaller(mouseX, mouseY, nextBoxX, nextBoxY)
+        boxPlacementSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Detects if the user wishes to leave the screen
+                if boxClickedSmaller(mouseX, mouseY, exitBoxX, exitBoxY):
+                    phase = 0
+                elif boxClickedSmaller(mouseX, mouseY, nextBoxX, nextBoxY):
+                    phase = -4
+                elif boxClickedSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY):
+                    phase = -2
+        
+        # Placing text onto buttons
+        surface.blit(capturingRuleHeading, (164, 10))
+        pygame.draw.line(surface, black, (164, 66), (436, 66), 3)
+        for line in range(0, len(capturingParagraph)):
+            surface.blit(capturingParagraph[line], (10, 100 + (35*line)))
+        surface.blit(exitText, (exitBoxX + 8, exitBoxY + 3))
+        surface.blit(nextText, (nextBoxX + 3, nextBoxY + 3))
+        surface.blit(backText, (backRuleBoxX + 5, backRuleBoxY + 3))
+        
+        # Updates frames
+        pygame.display.update()
+        
+    
+    # Placement rules screen
+    elif phase == -2:
+        
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, exitBoxX, exitBoxY)
+        boxPlacementSmaller(mouseX, mouseY, nextBoxX, nextBoxY)
+        boxPlacementSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Detects if the user wishes to leave the screen
+                if boxClickedSmaller(mouseX, mouseY, exitBoxX, exitBoxY):
+                    phase = 0
+                elif boxClickedSmaller(mouseX, mouseY, nextBoxX, nextBoxY):
+                    phase = -3
+                elif boxClickedSmaller(mouseX, mouseY, backRuleBoxX, backRuleBoxY):
+                    phase = -1
+        
+        # Placing text onto buttons
+        surface.blit(placingRuleHeading, (200, 10))
+        pygame.draw.line(surface, black, (200, 66), (400, 66), 3)
+        for line in range(0, len(placingParagraph)):
+            surface.blit(placingParagraph[line], (10, 100 + (35*line)))
+        surface.blit(exitText, (exitBoxX + 8, exitBoxY + 3))
+        surface.blit(nextText, (nextBoxX + 3, nextBoxY + 3))
+        surface.blit(backText, (backRuleBoxX + 5, backRuleBoxY + 3))
+        
+        # Updates frames
+        pygame.display.update()
+    
+    
+    # Overview rules section
+    elif phase == -1:
+        
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, exitBoxX, exitBoxY)
+        boxPlacementSmaller(mouseX, mouseY, nextBoxX, nextBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                
+                # Detects if the user wishes to leave the screen
+                if boxClickedSmaller(mouseX, mouseY, exitBoxX, exitBoxY):
+                    phase = 0
+                elif boxClickedSmaller(mouseX, mouseY, nextBoxX, nextBoxY):
+                    phase = -2
+        
+        # Placing text onto buttons
+        surface.blit(overviewRuleHeading, (164, 10))
+        pygame.draw.line(surface, black, (164, 66), (430, 66), 3)
+        for line in range(0, len(overviewParagraph)):
+            surface.blit(overviewParagraph[line], (10, 100 + (35*line)))
+        surface.blit(exitText, (exitBoxX + 8, exitBoxY + 3))
+        surface.blit(nextText, (nextBoxX + 3, nextBoxY + 3))
+        
+        # Updates frames
+        pygame.display.update()
+        
+
+    # For "Start" and "Quit" menu
+    elif phase == 0:
+
+        # Creation of buttons
+        boxPlacementNormal(mouseX, mouseY, ruleBoxX, ruleBoxY)
+        boxPlacementNormal(mouseX, mouseY, startBoxX, startBoxY)
+        boxPlacementNormal(mouseX, mouseY, quitBoxX, quitBoxY)
+
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # If button is clicked the program is terminated
+                if boxClickedNormal(mouseX, mouseY, ruleBoxX, ruleBoxY):
+                    phase = -1
+                elif boxClickedNormal(mouseX, mouseY, startBoxX, startBoxY):
+                    phase = 2
+                elif boxClickedNormal(mouseX, mouseY, quitBoxX, quitBoxY):
+                    pygame.quit()
+
+        #  Placing  text onto buttons
+        surface.blit(viewRulesText, (ruleBoxX + 9, ruleBoxY + 6))
+        surface.blit(startText, (startBoxX + 53, startBoxY + 3))
+        surface.blit(quitText, (quitBoxX + 53, quitBoxY + 3))
+
+        # Updates frames
+        pygame.display.update()
+
+
+    # For "Ai or Player" menu
+    elif phase == 2:
+
+        # Creation of buttons
+        boxPlacementSmaller(mouseX, mouseY, backBoxX, backBoxY)
+        boxPlacementNormal(mouseX, mouseY, playerBoxX, playerBoxY)
+        boxPlacementNormal(mouseX, mouseY, computerBoxX, computerBoxY)
+
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # Detects if user wants AI opponent or human opponent, or previous page
+                if boxClickedSmaller(mouseX, mouseY, backBoxX, backBoxY):
+                    phase = 0
+                elif boxClickedNormal(mouseX, mouseY, playerBoxX, playerBoxY):
+                    AI = False
+                    phase = 4
+                elif boxClickedNormal(mouseX, mouseY, computerBoxX, computerBoxY):
+                    AI = True
+                    phase = 3
+
+        #  Placing  text onto buttons
+        surface.blit(backText, (backBoxX + 5, backBoxY + 3))
+        surface.blit(opponentTypeText, (opponentTypeBoxX, opponentTypeBoxY))
+        surface.blit(playerText, (playerBoxX + 40, playerBoxY + 3))
+        surface.blit(computerText, (computerBoxX + 10, computerBoxY + 6))
+
+        # Updates frames
+        pygame.display.update()
+
+    # For the "AI difficulty" menu
+    elif phase == 3:
+        boxPlacementSmaller(mouseX, mouseY, backBoxX, backBoxY)
+        boxPlacementNormal(mouseX, mouseY, AIEasyBoxX, AIEasyBoxY)
+        boxPlacementNormal(mouseX, mouseY, AIIntermediateBoxX, AIIntermediateBoxY)
+        
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # Detects clicks for difficulty level or previous page
+                if boxClickedSmaller(mouseX, mouseY, backBoxX, backBoxY):
+                    phase = 2
+                elif boxClickedNormal(mouseX, mouseY, AIEasyBoxX, AIEasyBoxY):
+                    AIDifficulty = 1
+                    phase = 4
+                elif boxClickedNormal(mouseX, mouseY, AIIntermediateBoxX, AIIntermediateBoxY):
+                    AIDifficulty = 2
+                    phase = 4
+                
+        #  Placing  text onto buttons
+        surface.blit(backText, (backBoxX + 5, backBoxY + 3))
+        surface.blit(AIDifficultyText, (AIDifficultyBoxX, AIDifficultyBoxY))
+        surface.blit(AIEasyText, (AIEasyBoxX + 55, AIEasyBoxY + 3))
+        surface.blit(AIIntermediateText, (AIIntermediateBoxX + 2, AIIntermediateBoxY + 8))
+        
+
+        # Updates frames
+        pygame.display.update()
+
+    # For "Board size" menu
+    elif phase == 4:
+        boxPlacementSmaller(mouseX, mouseY, backBoxX, backBoxY)
+        boxPlacementNormal(mouseX, mouseY, a5x5BoxX, a5x5BoxY)
+        boxPlacementNormal(mouseX, mouseY, b9x9BoxX, b9x9BoxY)
+        boxPlacementNormal(mouseX, mouseY, c11x11BoxX, c11x11BoxY)
+        boxPlacementNormal(mouseX, mouseY, d13x13BoxX, d13x13BoxY)
+        boxPlacementNormal(mouseX, mouseY, e19x19BoxX, e19x19BoxY)
+
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # Detects clicks for board size or previous page
+                if boxClickedSmaller(mouseX, mouseY, backBoxX, backBoxY):
+                    if AI == True:
+                        phase = 3
+                    else:
+                        phase = 2
+                elif boxClickedNormal(mouseX, mouseY, a5x5BoxX, a5x5BoxY):
+                    boardSize = 5
+                    phase = 6
+                elif boxClickedNormal(mouseX, mouseY, b9x9BoxX, b9x9BoxY):
+                    boardSize = 9
+                    phase = 6
+                elif boxClickedNormal(mouseX, mouseY, c11x11BoxX, c11x11BoxY):
+                    boardSize = 11
+                    phase = 6
+                elif boxClickedNormal(mouseX, mouseY, d13x13BoxX, d13x13BoxY):
+                    boardSize = 13
+                    phase = 6
+                elif boxClickedNormal(mouseX, mouseY, e19x19BoxX, e19x19BoxY):
+                    boardSize = 19
+                    phase = 5
+
+        #  Placing  text onto buttons
+        surface.blit(backText, (backBoxX + 5, backBoxY + 3))
+        surface.blit(boardSizeText, (boardSizeBoxX, boardSizeBoxY))
+        surface.blit(a5x5Text, (a5x5BoxX + 68, a5x5BoxY + 3))
+        surface.blit(b9x9Text, (b9x9BoxX + 68, b9x9BoxY + 3))
+        surface.blit(c11x11Text, (c11x11BoxX + 45, c11x11BoxY + 3))
+        surface.blit(d13x13Text, (d13x13BoxX + 45, d13x13BoxY + 3))
+        surface.blit(e19x19Text, (e19x19BoxX + 45, e19x19BoxY + 3))
+
+        # Updates frames
+        pygame.display.update()
+
+    # For "Handicap" menu
+    elif phase == 5:
+        surface.blit(handicapExplainText, (handicapExplainBoxX, handicapExplainBoxY))
+        boxPlacementSmaller(mouseX, mouseY, backBoxX, backBoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap0BoxX, handicap0BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap2BoxX, handicap2BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap3BoxX, handicap3BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap4BoxX, handicap4BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap5BoxX, handicap5BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap6BoxX, handicap6BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap7BoxX, handicap7BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap8BoxX, handicap8BoxY)
+        boxPlacementSmall(mouseX, mouseY, handicap9BoxX, handicap9BoxY)
+
+        # Checks events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Checks if a mouse is clicked
+            if event.type == pygame.MOUSEBUTTONDOWN:
+
+                # Detects clicks for handicap level or previous page
+                if boxClickedSmaller(mouseX, mouseY, backBoxX, backBoxY):
+                    phase = 4
+                elif boxClickedSmall(mouseX, mouseY, handicap0BoxX, handicap0BoxY):
+                    handicapLevel = 0
+                elif boxClickedSmall(mouseX, mouseY, handicap2BoxX, handicap2BoxY):
+                    handicapLevel = 2
+                elif boxClickedSmall(mouseX, mouseY, handicap3BoxX, handicap3BoxY):
+                    handicapLevel = 3
+                elif boxClickedSmall(mouseX, mouseY, handicap4BoxX, handicap4BoxY):
+                    handicapLevel = 4
+                elif boxClickedSmall(mouseX, mouseY, handicap5BoxX, handicap5BoxY):
+                    handicapLevel = 5
+                elif boxClickedSmall(mouseX, mouseY, handicap6BoxX, handicap6BoxY):
+                    handicapLevel = 6
+                elif boxClickedSmall(mouseX, mouseY, handicap7BoxX, handicap7BoxY):
+                    handicapLevel = 7
+                elif boxClickedSmall(mouseX, mouseY, handicap8BoxX, handicap8BoxY):
+                    handicapLevel = 8
+                elif boxClickedSmall(mouseX, mouseY, handicap9BoxX, handicap9BoxY):
+                    handicapLevel = 9
+                    
+                if handicapLevel != -1:
+                    phase = 6
+
+        #  Placing  text onto buttons
+        surface.blit(backText, (backBoxX + 5, backBoxY + 3))
+        surface.blit(handicap0Text, (handicap0BoxX + 25, handicap0BoxY + 5))
+        surface.blit(handicap2Text, (handicap2BoxX + 25, handicap2BoxY + 5))
+        surface.blit(handicap3Text, (handicap3BoxX + 25, handicap3BoxY + 5))
+        surface.blit(handicap4Text, (handicap4BoxX + 25, handicap4BoxY + 5))
+        surface.blit(handicap5Text, (handicap5BoxX + 25, handicap5BoxY + 5))
+        surface.blit(handicap6Text, (handicap6BoxX + 25, handicap6BoxY + 5))
+        surface.blit(handicap7Text, (handicap7BoxX + 25, handicap7BoxY + 5))
+        surface.blit(handicap8Text, (handicap8BoxX + 25, handicap8BoxY + 5))
+        surface.blit(handicap9Text, (handicap9BoxX + 25, handicap9BoxY + 5))
+
+        # Updates frames
+        pygame.display.update()
+    
+    # Creates the text based board and variables associated with the board
+    elif phase == 6:
+        board = []
+        blackGroups = []
+        whiteGroups = []
+        for i in range(0, boardSize):
+            board.append([])
+            for j in range(0, boardSize):
+                board[i].append("-")
+        
+        # Defines board variables
+        boardStart = int(displayLength / (boardSize + 1))
+        boardEnd = int(displayLength - boardStart)
+        boardLength = int(displayLength - (boardStart * 2))
+        intersectionLength = boardStart
+        halfIntersection = int(intersectionLength / 2)
+        
+        # For the visual board
+        pygame.draw.rect(surface, orange, [boardStart, boardStart, boardLength, boardLength])
+        for i in range(0, boardSize):
+            x = (boardLength / (boardSize - 1)) * i
+            y = (boardLength / (boardSize - 1)) * i
+            pygame.draw.line(surface, black, (boardStart, y + boardStart), (boardEnd, y + boardStart), 3)
+            pygame.draw.line(surface, black, (x + boardStart, boardStart), (x + boardStart, boardEnd), 3)
+        
+        # Setting colour of opponents
+        if handicapLevel <= 0:
+            if AI:
+                if random.randint(0, 1) == 0:
+                    player = "B"
+                    AIColour = "W"
+                else:
+                    player = "W"
+                    AIColour = "B"
+                phase = 7
+            else:
+                colour = "B"
+                phase = 8
+        else:
+            if AI:
+                AIColour = "B"
+                player = "W"
+                phase = 7
+            else:
+                colour = "W"
+                phase = 8
+        
+    
+    # Gameplay for player vs computer
+    elif phase == 7:
+        boxPlacementTiny(mouseX, mouseY, passBoxX, passBoxY)
+        boxPlacementTiny(mouseX, mouseY, resignBoxX, resignBoxY)
+        handicapPlacement(handicapLevel)
+        playersTurn = False
+        
+        # Game loop
+        run = True
+        while run:
+            # Places the stone for the AI player if AIColour = black
+            if AIColour == "B" and not playersTurn:
+                AITurn(AIColour)
+                pygame.display.update()
+                playersTurn = True
+                
+            # To check every action
+            for event in pygame.event.get():
+                
+                # Allows user to quit by pressing the x in the top right
+                #if event.type == pygame.QUIT():
+                    #pygame.quit()
+                
+                # Gets the mouse position when left or right mouse button is pressed
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouseX, mouseY = pygame.mouse.get_pos()
+                
+                    # Detects if user passes their turn
+                    if boxClickedTiny(mouseX, mouseY, passBoxX, passBoxY):
+                        passCounter += 1
+                        # Detects when the game is over
+                        if passCounter == 2:
+                            run = False
+                            phase = 9
+                            result = endGame()
+                    
+                    # Detects when a player resigns
+                    if boxClickedTiny(mouseX, mouseY, resignBoxX, resignBoxY):
+                        resign = True
+                        run = False
+                        phase = 9
+                        result = endGame()
+                    
+                    if phase != 9:                            
+                        # Calculates the closest intersection to the mouse
+                        stonesX = intersectionLength * ((mouseX + halfIntersection) // intersectionLength)
+                        stonesY = intersectionLength * ((mouseY + halfIntersection) // intersectionLength)
+                        # Prevents placing on the outside of the board
+                        if stonesX != 0 and stonesX != displayLength and stonesY != 0 and stonesY != displayLength:
+                            # Calculates the position to place on the underlying data structure
+                            x = int((stonesX // intersectionLength) - 1)
+                            y = int((stonesY // intersectionLength) - 1)
+
+                            # Checks if the stone is suitable to be placed
+                            validPlacement = stonePlacement(x, y, player)                                
+                            if validPlacement != False:
+                                # Stone is placed and then placed into a group
+                                stoneGrouping(x, y, player)
+
+                                # Checks if the stone can captures any surrounding stones
+                                stoneCapture(x, y, player)
+
+                                # Draws stone onto visual board
+                                drawStones(stonesX, stonesY, player)
+                                showBoard()
+                                print()
+
+                                # Progresses turn, swapping colours
+                                turn += 1
+                                passCounter = 0
+                                playersTurn = False
+                        
+                        else:
+                            playersTurn = True
+                        
+                        # Places the stone for the AI player if AIColour = white
+                        if AIColour == "W" and not playersTurn:
+                            AITurn(AIColour)
+                            pygame.display.update()
+                
+                # Places tect onto buttons and screen
+                surface.blit(passText, (passBoxX + 2, passBoxY + 2))
+                pygame.draw.rect(surface, grey, [passCounterBoxX, passCounterBoxY, 150, 20])
+                surface.blit(passCounterText, (passCounterBoxX, passCounterBoxY + 2))
+                surface.blit(font20.render(str(passCounter), True, white), (passCounterBoxX + 115, passCounterBoxY + 2))
+                surface.blit(resignText, (resignBoxX + 10, resignBoxY + 2))
+
+            pygame.display.update()
+    
+    # Gameplay for player vs player
+    if phase == 8:
+        boxPlacementTiny(mouseX, mouseY, passBoxX, passBoxY)
+        boxPlacementTiny(mouseX, mouseY, resignBoxX, resignBoxY)
+        handicapPlacement(handicapLevel)
+        
+        # Game loop
+        run = True
+        while run:
+            # To check every action
+            for event in pygame.event.get():
+
+                # Allows user to quit by pressing the x in the top right
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+                # Gets the mouse position when left or right mouse button is pressed
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    mouseX, mouseY = pygame.mouse.get_pos()
+                    
+                    # Detects if user passes their turn
+                    if boxClickedTiny(mouseX, mouseY, passBoxX, passBoxY):
+                        changeTurn()
+                        passCounter += 1
+                        # Detects when the game is over
+                        if passCounter == 2:
+                            run = False
+                            phase = 9
+                            result = endGame()
+                    
+                    # Detects when a player resigns
+                    if boxClickedTiny(mouseX, mouseY, resignBoxX, resignBoxY):
+                        resign = True
+                        run = False
+                        phase = 9
+                        result = endGame()
+                    
+                    if phase != 9:
+                        # Calculates the closest intersection to the mouse
+                        stonesX = intersectionLength * ((mouseX + halfIntersection) // intersectionLength)
+                        stonesY = intersectionLength * ((mouseY + halfIntersection) // intersectionLength)
+                        # Prevents placing on the outside of the board
+                        print("Mouse X location: " + str(mouseX))
+                        print("Mouse Y location: " + str(mouseY))
+                        if stonesX != 0 and stonesX != displayLength and stonesY != 0 and stonesY != displayLength:
+                            # Calculates the position to place on the underlying data structure
+                            x = int((stonesX // intersectionLength) - 1)
+                            y = int((stonesY // intersectionLength) - 1)
+
+                            # Checks if the stone is suitable to be placed
+                            validPlacement = stonePlacement(x, y, colour)
+                            if validPlacement != False:
+                                # Stone is placed and then placed into a group
+                                stoneGrouping(x, y, colour)
+
+                                # Checks if the stone can captures any surrounding stones
+                                stoneCapture(x, y, colour)
+
+                                # Draws stone onto visual board
+                                drawStones(stonesX, stonesY, colour)
+                                showBoard()
+                                print("Black: " + str(blackGroups))
+                                print("White: " + str(whiteGroups))
+                                print()
+                                print()
+
+                                # Progresses turn, swapping colours
+                                changeTurn()
+                                passCounter = 0
+                
+                # Places text onto buttons and the screen
+                surface.blit(passText, (passBoxX + 2, passBoxY + 2))
+                pygame.draw.rect(surface, grey, [passCounterBoxX, passCounterBoxY, 150, 20])
+                surface.blit(passCounterText, (passCounterBoxX, passCounterBoxY + 2))
+                surface.blit(font20.render(str(passCounter), True, white), (passCounterBoxX + 115, passCounterBoxY + 2))
+                surface.blit(resignText, (resignBoxX + 10, resignBoxY + 2))
+
+            pygame.display.update()
+
+    
+    # Game over screen
+    if phase == 9:
+        # Resets variables
+        handicapLevel = 0
+        passCounter = 0
+        resign = 0
+        # Drawing the end game screen
+        pygame.draw.rect(surface, darkGrey, [150, 50, 300, 250])
+        pygame.draw.rect(surface, black, [150, 50, 300, 250], 4)
+        pygame.draw.rect(surface, darkGrey, [blackScoreBoxX, blackScoreBoxY, 200, 100])
+        pygame.draw.rect(surface, black, [blackScoreBoxX, blackScoreBoxY, 200, 100], 4)
+        pygame.draw.rect(surface, darkGrey, [whiteScoreBoxX, whiteScoreBoxY, 200, 100])
+        pygame.draw.rect(surface, black, [whiteScoreBoxX, whiteScoreBoxY, 200, 100], 4)
+        boxPlacementNormalBorder3(mouseX, mouseY, continueBoxX, continueBoxY)
+        boxPlacementNormalBorder3(mouseX, mouseY, endQuitBoxX, endQuitBoxY)
+        
+        # Placing text onto the end game screen
+        surface.blit(blackScoreText, (blackScoreBoxX+20, blackScoreBoxY+15))
+        surface.blit(font70.render(str(result[0]), True, white), (blackScoreBoxX+70, blackScoreBoxY+35))
+        surface.blit(whiteScoreText, (whiteScoreBoxY+20, whiteScoreBoxY+15))
+        surface.blit(font70.render(str(result[1]), True, white), (whiteScoreBoxX+70, whiteScoreBoxY+35))
+        
+        # Checking whether game finished via resigning or passing
+        if resign == True:
+            if AI:
+                if player == "B":
+                    surface.blit(whiteText, (190, 75))
+                else:
+                    surface.blit(blackText, (175, 75))
+            elif not AI:
+                if colour == "B":
+                    surface.blit(blackText, (190, 75))
+                else:
+                    surface.blit(whiteText, (175, 75))
+                
+        else:
+            if result[0] > result[1]:
+                surface.blit(blackText, (190, 75))
+            elif result[0] < result[1]:
+                surface.blit(whiteText, (175, 75))
+            elif result[0] == result[1]:
+                surface.blit(drawText, (152, 75))
+        surface.blit(winText, (185, 180))
+        
+        # To check every action
+        for event in pygame.event.get():
+
+            # Allows user to quit by pressing the x in the top right
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+            # Gets the mouse position when left or right mouse button is pressed
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouseX, mouseY = pygame.mouse.get_pos()
+                
+                if boxClickedNormal(mouseX, mouseY, continueBoxX, continueBoxY):
+                    phase = 0
+                elif boxClickedNormal(mouseX, mouseY, endQuitBoxX, endQuitBoxY):
+                    pygame.quit()
+        
+        # Places text onto buttons
+        surface.blit(continueText, (continueBoxX + 5, continueBoxY + 3))
+        surface.blit(quitText, (endQuitBoxX + 10, endQuitBoxY + 3))
+        
+        pygame.display.update()
